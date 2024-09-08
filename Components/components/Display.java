@@ -4,18 +4,19 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
 
+
 public class Display extends JPanel {
+    public static Color on = Color.WHITE;
+    public static Color off = Color.BLACK;
 
     private final int pixelSize = 10;
-    private Color[][] pixelColours = new Color[32][64];
+    public int[][] pixels = new int[32][64];
 
     public Display()
     {
-        for (int row = 0; row < pixelColours.length; row++) {
-            Arrays.fill(pixelColours[row], Color.WHITE);
+        for (int row = 0; row < pixels.length; row++) {
+            Arrays.fill(pixels[row], 0);
         }
-
-        pixelColours[5][7] = Color.BLACK;
     }
 
     @Override
@@ -23,25 +24,39 @@ public class Display extends JPanel {
         super.paintComponent(g);
 
         // Set background color
-        this.setBackground(Color.WHITE);
+        this.setBackground(off);
 
-        for (int row = 0; row < pixelColours.length; row++) {
-            for (int col = 0; col < pixelColours[row].length; col++) {
+        for (int row = 0; row < pixels.length; row++) {
+            for (int col = 0; col < pixels[row].length; col++) {
                 // Set color for each pixel
-                g.setColor(pixelColours[row][col]);
+                if (pixels[row][col] == 1) {
+                    g.setColor(on);
+                }
+                else {
+                    g.setColor(off);
+                }
+
                 // Draw filled rectangle (the pixel)
                 g.fillRect(col * pixelSize, row * pixelSize, pixelSize, pixelSize);
             }
         }
 
         // Set grid color
-        g.setColor(Color.BLACK);
+        g.setColor(on);
     }
 
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("64x32 Pixel Grid");
-        Display grid = new Display();
-        frame.add(grid);
+    public void clear()
+    {
+        for (int row = 0; row < pixels.length; row++) {
+            Arrays.fill(pixels[row], 0);
+        }
+
+        this.repaint();
+    }
+
+    public static void createDisplay(Display d) {
+        JFrame frame = new JFrame("CHIPster");
+        frame.add(d);
         frame.setSize(640, 320);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);

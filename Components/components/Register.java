@@ -18,4 +18,9 @@ public class Register {
         data = newData;
     }
 
+    public void add(byte valueToAdd)
+    {
+        data += valueToAdd;
+    }
+
 }

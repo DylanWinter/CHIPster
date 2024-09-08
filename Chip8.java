@@ -7,11 +7,13 @@ public class Chip8 {
     Memory memory;
     Stack stack;
 
+
     Register[] registers;
 
     int pc = 0x200;
+    int I = 0x000;
 
-    int rate = 100;
+    int rate = 3;
 
     public Chip8(String filePath)
     {
@@ -19,6 +21,11 @@ public class Chip8 {
         memory = new Memory();
         stack = new Stack();
         registers = new Register[16];
+        for (int i = 0; i < registers.length; i++)
+        {
+            registers[i] = new Register();
+        }
+
         try{
             this.loadRom(filePath);
         }
@@ -32,6 +39,8 @@ public class Chip8 {
 
     public void run()
     {
+        Display.createDisplay(display);
+
         long delay = 1000 / rate;
 
         while (true)
@@ -42,17 +51,64 @@ public class Chip8 {
             byte first = memory.read(pc);
             byte second = memory.read(pc + 1);
 
-            byte nib1 = (byte) ((first >> 4) & 0x0F); // first nibble
+            byte op = (byte) ((first >> 4) & 0x0F); // first nibble
             byte x = (byte) (first & 0x0F);  // second nibble
             byte y = (byte) ((second >> 4) & 0x0F); // third nibble
             byte n = (byte) (second & 0x0F); // fourth nibble
+            byte nn = second; // third and fourth nibbles
             int nnn = (x << 8) | (y << 4) | n; // second, third and fourth nibbles
 
-            
-
             pc += 2;
+            //System.out.println(pc);
+
+            switch (op)
+            {
+                // clear screen
+                case 0x0:
+                    System.out.println("clearing display");
+                    display.clear();
+                    break;
+                // jump
+                case 0x1:
+                    System.out.print("jumping to " + nnn + "\n");
+                    pc = nnn;
+                    break;
+                // set register Vx
+                case 0x6:
+                    System.out.print("writing to register" + x + "\n");
+                    registers[x].write(nn);
+                    break;
+                // add to register Vx
+                case 0x7:
+                    registers[x].add(nn);
+                    break;
+                // set index register
+                case 0xA:
+                    I = nnn;
+                    break;
+                // display/draw
+                case 0xD:
+                    registers[0xF].write((byte) 0);  // Reset the collision flag
 
 
+                    for (int row = 0; row < n; row++) {
+                        int spriteByte = memory.read(I + row);  // Get sprite row from memory
+                        for (int col = 0; col < 8; col++) {
+                            int spritePixel = (spriteByte >> (7 - col)) & 1;  // Get each bit (pixel) of the sprite
+                            int displayX = (x + col) % 64;  // Wrap around horizontally
+                            int displayY = (y + row) % 32;  // Wrap around vertically
+
+                            // Check if we are XORing with an existing pixel
+                            if (spritePixel == 1) {
+                                if (display.pixels[displayY][displayX] == 1) {
+                                    registers[0xF].write((byte) 0x1);  // Set collision flag if a pixel is turned off
+                                }
+                                display.pixels[displayY][displayX] ^= 1;  // XOR the pixel
+                            }
+                        }
+                    }
+                    break;
+            }
 
 
             // delay to keep fixed instruction rate
