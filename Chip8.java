@@ -13,7 +13,7 @@ public class Chip8 {
     int pc = 0x200;
     int I = 0x000;
 
-    int rate = 3;
+    int rate = 50;
 
     public Chip8(String filePath)
     {
@@ -116,7 +116,7 @@ public class Chip8 {
                             }
                         }
                     }
-
+                    display.repaint();
                     break;
                 default:
                     System.out.printf("Error with opcode: %d %d %d %d%n", op, x, y, n);
