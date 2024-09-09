@@ -1,11 +1,15 @@
 import Components.components.*;
 
 import java.io.*;
+import java.util.*;
 
 public class Chip8 {
     Display display;
     Memory memory;
-    Stack stack;
+    Keypad keypad;
+    Components.components.Stack stack;
+
+    Random rand;
 
 
     Register[] registers;
@@ -21,7 +25,10 @@ public class Chip8 {
 
         display = new Display();
         memory = new Memory();
-        stack = new Stack();
+        keypad = new Keypad();
+        display.add(keypad);
+        stack = new Components.components.Stack();
+        rand = new Random();
         registers = new Register[16];
         for (int i = 0; i < registers.length; i++)
         {
@@ -115,7 +122,17 @@ public class Chip8 {
                 case 0xA:
                     I = nnn;
                     break;
-                // Dxyn display/draw
+                // Bnnn jump with offset
+                case 0xB:
+                    pc = nnn + registers[0].read();
+                    break;
+                // Cxnn random
+                case 0xC:
+                    int r = rand.nextInt();
+                    r = (r & 0xFF);
+                    registers[x].write((byte) (r & nn));
+
+                    // Dxyn display/draw
                 case 0xD:
                     registers[0xF].write((byte) 0);  // Reset the collision flag
 
@@ -250,6 +267,30 @@ public class Chip8 {
                         registers[x].write( (byte) (difference % 255));
 
                         break;
+                    }
+                    break;
+
+                // E depends on last byte
+                case 0xE:
+                    if (y == 0x9 && n == 0xE) { // EX9E: Skip next instruction if key stored in Vx is pressed
+                        if (keypad.isKeyPressed(registers[x].read())) {
+                            pc += 2;
+                        }
+                    } else if (y == 0xA && n == 0x1) { // EXA1: Skip next instruction if key stored in Vx is not pressed
+                        if (!keypad.isKeyPressed(registers[x].read())) {
+                            pc += 2;
+                        }
+                    }
+                    break;
+
+                // F depends on last byte  -- CURRENTLY INCOMPLETE --
+                case 0xF:
+                    if (nn == 0x0A)
+                    {
+                        if (!keypad.isAnyKeyPressed())
+                        {
+                            pc -= 2;
+                        }
                     }
                     break;
 
