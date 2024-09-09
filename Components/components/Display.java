@@ -9,7 +9,7 @@ public class Display extends JPanel {
     public static Color on = Color.WHITE;
     public static Color off = Color.BLACK;
 
-    private final int pixelSize = 10;
+    private final int pixelSize = 20;
     public int[][] pixels = new int[32][64];
 
     public Display()

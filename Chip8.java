@@ -37,8 +37,7 @@ public class Chip8 {
 
     }
 
-    public void run()
-    {
+    public void run() {
         Display.createDisplay(display);
 
         long delay = 1000 / rate;
@@ -48,29 +47,29 @@ public class Chip8 {
             long start = System.currentTimeMillis();
 
             // execute next instruction here //
-            byte first = memory.read(pc);
-            byte second = memory.read(pc + 1);
+            int first = (memory.read(pc) & 0xFF);
+            int second =  (memory.read(pc + 1) & 0xFF);
 
-            byte op = (byte) ((first >> 4) & 0x0F); // first nibble
-            byte x = (byte) (first & 0x0F);  // second nibble
-            byte y = (byte) ((second >> 4) & 0x0F); // third nibble
-            byte n = (byte) (second & 0x0F); // fourth nibble
-            byte nn = second; // third and fourth nibbles
-            int nnn = (x << 8) | (y << 4) | n; // second, third and fourth nibbles
+            int opcode = ((first & 0xFF) << 8) | (second & 0xFF);
+            byte op = (byte) ((opcode >> 12) & 0x0F);  // First nibble
+            byte x = (byte) ((opcode >> 8) & 0x0F);    // Second nibble
+            byte y = (byte) ((opcode >> 4) & 0x0F);    // Third nibble
+            byte n = (byte) (opcode & 0x0F);           // Fourth nibble
+            byte nn = (byte) (opcode & 0xFF);          // Last 8 bits
+            int nnn = opcode & 0x0FFF;                 // Last 12 bits
 
             pc += 2;
-            //System.out.println(pc);
 
             switch (op)
             {
                 // clear screen
                 case 0x0:
                     System.out.println("clearing display");
-                    display.clear();
+                    //display.clear();
                     break;
                 // jump
                 case 0x1:
-                    System.out.print("jumping to " + nnn + "\n");
+                    System.out.print("jumping to " + nnn + " " + op + " " + x + " " + y + " " + n + "\n");
                     pc = nnn;
                     break;
                 // set register Vx
@@ -80,34 +79,47 @@ public class Chip8 {
                     break;
                 // add to register Vx
                 case 0x7:
+                    System.out.println("Adding to register " + x);
                     registers[x].add(nn);
                     break;
                 // set index register
                 case 0xA:
+                    System.out.println("Setting index register to " + nnn);
                     I = nnn;
                     break;
                 // display/draw
                 case 0xD:
+                    System.out.println("Drawing to screen");
                     registers[0xF].write((byte) 0);  // Reset the collision flag
 
+                    int xPos = registers[x].read() % 64;
+                    int yPos = registers[y].read() % 32;
 
-                    for (int row = 0; row < n; row++) {
-                        int spriteByte = memory.read(I + row);  // Get sprite row from memory
-                        for (int col = 0; col < 8; col++) {
-                            int spritePixel = (spriteByte >> (7 - col)) & 1;  // Get each bit (pixel) of the sprite
-                            int displayX = (x + col) % 64;  // Wrap around horizontally
-                            int displayY = (y + row) % 32;  // Wrap around vertically
-
-                            // Check if we are XORing with an existing pixel
-                            if (spritePixel == 1) {
-                                if (display.pixels[displayY][displayX] == 1) {
-                                    registers[0xF].write((byte) 0x1);  // Set collision flag if a pixel is turned off
+                    for (int spriteRow=0; spriteRow<n; ++spriteRow)
+                    {
+                        var spriteRowData = memory.read(I + spriteRow);
+                        for(int bit = 0; bit < 8; bit++)
+                        {
+                            if(xPos + bit < 64 && yPos + spriteRow < 32)
+                            {
+                                int spritePixel = (spriteRowData >> (7-bit)) & 1;
+                                int screenPixel = display.pixels[yPos + spriteRow][xPos + bit];
+                                if (spritePixel == 1 & screenPixel == 1)
+                                {
+                                    registers[0xF].write((byte) 1);
                                 }
-                                display.pixels[displayY][displayX] ^= 1;  // XOR the pixel
+
+                                display.pixels[yPos + spriteRow][xPos + bit] ^= spritePixel;
+                            }
+                            else {
+                                System.out.println("Out of bounds draw attempt");
                             }
                         }
                     }
+
                     break;
+                default:
+                    System.out.printf("Error with opcode: %d %d %d %d%n", op, x, y, n);
             }
 
 
