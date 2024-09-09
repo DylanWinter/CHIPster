@@ -4,9 +4,10 @@ public class Main {
 
     public static void main(String[] args)
     {
-        String path = "Roms/IBMLogo.ch8";
+        String path = "Roms/Breakout.ch8";
+        int rate = 100;
 
-        emu = new Chip8(path);
+        emu = new Chip8(path, rate);
         emu.run();
     }
 }

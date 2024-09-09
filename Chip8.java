@@ -13,10 +13,12 @@ public class Chip8 {
     int pc = 0x200;
     int I = 0x000;
 
-    int rate = 50;
+    int rate;
 
-    public Chip8(String filePath)
+    public Chip8(String filePath, int rate)
     {
+        this.rate = rate;
+
         display = new Display();
         memory = new Memory();
         stack = new Stack();
@@ -62,34 +64,59 @@ public class Chip8 {
 
             switch (op)
             {
-                // clear screen
+                // 00e0 clear screen
                 case 0x0:
-                    System.out.println("clearing display");
-                    //display.clear();
+                    System.out.println("Clearing display.");
+                    display.clear();
                     break;
-                // jump
+                // 1nnn jump
                 case 0x1:
-                    System.out.print("jumping to " + nnn + " " + op + " " + x + " " + y + " " + n + "\n");
                     pc = nnn;
                     break;
-                // set register Vx
+                // 3xnn skip conditionally
+                case 0x3:
+                    if (registers[x].read() == nn)
+                    {
+                        pc += 2;
+                    }
+                    break;
+                // 4xnn skip conditionally
+                case 0x4:
+                {
+                    if (registers[x].read() != nn)
+                    {
+                        pc += 2;
+                    }
+                    break;
+                }
+                // 5xy0 skip conditionally
+                case 0x5:
+                    if (registers[x].read() == registers[y].read())
+                    {
+                        pc += 2;
+                    }
+                    break;
+                // 6xnn set register Vx
                 case 0x6:
-                    System.out.print("writing to register" + x + "\n");
                     registers[x].write(nn);
                     break;
-                // add to register Vx
+                // 7xnn add to register Vx
                 case 0x7:
-                    System.out.println("Adding to register " + x);
                     registers[x].add(nn);
                     break;
-                // set index register
+                // 9xy0 skip conditionally
+                case 0x9:
+                    if (registers[x].read() != registers[y].read())
+                    {
+                        pc += 2;
+                    }
+                    break;
+                // Annn set index register
                 case 0xA:
-                    System.out.println("Setting index register to " + nnn);
                     I = nnn;
                     break;
-                // display/draw
+                // Dxyn display/draw
                 case 0xD:
-                    System.out.println("Drawing to screen");
                     registers[0xF].write((byte) 0);  // Reset the collision flag
 
                     int xPos = registers[x].read() % 64;
@@ -118,6 +145,114 @@ public class Chip8 {
                     }
                     display.repaint();
                     break;
+
+                // 8 depends on the value of the last nibble
+                case 0x8:
+                    int xval;
+                    int yval;
+                    int sum;
+                    int difference;
+                    switch (n)
+                    {
+                        // 8xy0 set
+                        case 0x0:
+                            registers[x].write(registers[y].read());
+                            break;
+                        // 8xy1 binary OR
+                        case 0x1:
+                            registers[x].write( (byte) (registers[x].read() | registers[y].read()) );
+                            break;
+                        // 8xy2 binary AND
+                        case 0x2:
+                            registers[x].write( (byte) (registers[x].read() & registers[y].read()) );
+                            break;
+                        // 8xy3 binary XOR
+                        case 0x3:
+                            registers[x].write( (byte) (registers[x].read() ^ registers[y].read()) );
+                            break;
+                        // 8xy4 add
+                        case 0x4:
+                            xval = registers[x].read();
+                            if (xval < 0) {
+                                xval = Math.abs(xval) + 128;
+                            }
+
+                            yval = registers[y].read();
+                            if (yval < 0) {
+                                yval = Math.abs(yval) + 128;
+                            }
+
+                            sum = xval + yval;
+                            // set overflow flag
+                            if (sum > 255)
+                            {
+                                registers[0xF].write((byte) 1);
+                            }
+
+                            registers[x].write( (byte) (sum % 255));
+
+                            break;
+                        // 8xy5 sub
+                        case 0x5:
+                            xval = registers[x].read();
+                            if (xval < 0) {
+                                xval = Math.abs(xval) + 128;
+                            }
+
+                            yval = registers[y].read();
+                            if (yval < 0) {
+                                yval = Math.abs(yval) + 128;
+                            }
+
+                            difference = xval - yval;
+                            // set overflow flag
+                            if (difference < 0) {
+                                difference = Math.abs(difference) + 128;
+                                registers[0xF].write((byte) (0));
+                            }
+                            else {
+                                registers[0xF].write((byte) (1));
+                            }
+
+                            {
+                                registers[0xF].write((byte) 1);
+                            }
+
+                            registers[x].write( (byte) (difference % 255));
+
+                            break;
+                        // 8xy7 sub
+                        case 0x7:
+                            xval = registers[x].read();
+                            if (xval < 0) {
+                                xval = Math.abs(xval) + 128;
+                            }
+
+                            yval = registers[y].read();
+                            if (yval < 0) {
+                                yval = Math.abs(yval) + 128;
+                            }
+
+                            difference = yval - xval;
+                            // set overflow flag
+                            if (difference < 0) {
+                                difference = Math.abs(difference) + 128;
+                                registers[0xF].write((byte) (0));
+                            }
+                            else {
+                                registers[0xF].write((byte) (1));
+                            }
+
+                        {
+                            registers[0xF].write((byte) 1);
+                        }
+
+                        registers[x].write( (byte) (difference % 255));
+
+                        break;
+                    }
+                    break;
+
                 default:
                     System.out.printf("Error with opcode: %d %d %d %d%n", op, x, y, n);
             }
