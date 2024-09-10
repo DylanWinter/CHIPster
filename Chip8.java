@@ -189,84 +189,48 @@ public class Chip8 {
                             break;
                         // 8xy4 add
                         case 0x4:
-                            xval = registers[x].read();
-                            if (xval < 0) {
-                                xval = Math.abs(xval) + 128;
-                            }
-
-                            yval = registers[y].read();
-                            if (yval < 0) {
-                                yval = Math.abs(yval) + 128;
-                            }
+                            xval = registers[x].read() & 0xFF;
+                            yval = registers[y].read() & 0xFF;
 
                             sum = xval + yval;
-                            // set overflow flag
-                            if (sum > 255)
-                            {
+                            // Set overflow flag
+                            if (sum > 255) {
                                 registers[0xF].write((byte) 1);
+                            } else {
+                                registers[0xF].write((byte) 0);
                             }
 
-                            registers[x].write( (byte) (sum % 255));
-
+                            registers[x].write((byte) (sum & 0xFF));
                             break;
                         // 8xy5 sub
                         case 0x5:
-                            xval = registers[x].read();
-                            if (xval < 0) {
-                                xval = Math.abs(xval) + 128;
-                            }
+                            xval = registers[x].read() & 0xFF;
+                            yval = registers[y].read() & 0xFF;
 
-                            yval = registers[y].read();
-                            if (yval < 0) {
-                                yval = Math.abs(yval) + 128;
-                            }
-
-                            difference = xval - yval;
-                            // set overflow flag
-                            if (difference < 0) {
-                                difference = Math.abs(difference) + 128;
-                                registers[0xF].write((byte) (0));
-                            }
-                            else {
-                                registers[0xF].write((byte) (1));
-                            }
-
-                            {
+                            if (xval >= yval) {
                                 registers[0xF].write((byte) 1);
+                            } else {
+                                registers[0xF].write((byte) 0);
                             }
 
-                            registers[x].write( (byte) (difference % 255));
-
+                            difference = (xval - yval) & 0xFF;
+                            registers[x].write((byte) difference);
                             break;
+
                         // 8xy7 sub
                         case 0x7:
-                            xval = registers[x].read();
-                            if (xval < 0) {
-                                xval = Math.abs(xval) + 128;
+                            xval = registers[x].read() & 0xFF;
+                            yval = registers[y].read() & 0xFF;
+
+                            if (yval >= xval) {
+                                registers[0xF].write((byte) 1);
+                            } else {
+                                registers[0xF].write((byte) 0);
                             }
 
-                            yval = registers[y].read();
-                            if (yval < 0) {
-                                yval = Math.abs(yval) + 128;
-                            }
-
-                            difference = yval - xval;
-                            // set overflow flag
-                            if (difference < 0) {
-                                difference = Math.abs(difference) + 128;
-                                registers[0xF].write((byte) (0));
-                            }
-                            else {
-                                registers[0xF].write((byte) (1));
-                            }
-
-                        {
-                            registers[0xF].write((byte) 1);
-                        }
-
-                        registers[x].write( (byte) (difference % 255));
-
-                        break;
+                            difference = (yval - xval) & 0xFF;
+                            registers[x].write((byte) difference);
+                            break;
                     }
                     break;
 
