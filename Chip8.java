@@ -131,6 +131,7 @@ public class Chip8 {
                     int r = rand.nextInt();
                     r = (r & 0xFF);
                     registers[x].write((byte) (r & nn));
+                    break;
 
                     // Dxyn display/draw
                 case 0xD:
