@@ -71,13 +71,26 @@ public class Chip8 {
 
             switch (op)
             {
-                // 00e0 clear screen
+                // 0 depends on value of n
                 case 0x0:
-                    System.out.println("Clearing display.");
-                    display.clear();
+                    // 00ee return from subroutine
+                    if (n == 0xE) {
+                        pc = stack.pop();
+                    }
+                    // 00e0 clear screen
+                    if (n == 0x0)
+                    {
+                        System.out.println("Clearing display.");
+                        display.clear();
+                    }
                     break;
                 // 1nnn jump
                 case 0x1:
+                    pc = nnn;
+                    break;
+                // 2nnn go to subroutine
+                case 0x2:
+                    stack.push(pc);
                     pc = nnn;
                     break;
                 // 3xnn skip conditionally
@@ -155,9 +168,6 @@ public class Chip8 {
                                 }
 
                                 display.pixels[yPos + spriteRow][xPos + bit] ^= spritePixel;
-                            }
-                            else {
-                                System.out.println("Out of bounds draw attempt");
                             }
                         }
                     }

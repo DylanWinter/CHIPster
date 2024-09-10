@@ -1,19 +1,19 @@
 package Components.components;
 import java.util.ArrayList;
 public class Stack {
-    ArrayList<Byte> data;
+    ArrayList<Integer> data;
 
     public Stack()
     {
-        data = new ArrayList<Byte>();
+        data = new ArrayList<Integer>();
     }
 
-    public void push(Byte value)
+    public void push(Integer value)
     {
         data.add(value);
     }
 
-    public Byte pop()
+    public Integer pop()
     {
         if (data.isEmpty())
         {
