@@ -1,5 +1,6 @@
 import Components.components.*;
 
+import java.awt.*;
 import java.io.*;
 import java.util.*;
 
@@ -8,6 +9,7 @@ public class Chip8 {
     Memory memory;
     Keypad keypad;
     Components.components.Stack stack;
+    Components.components.Timer delayTimer;
 
     Random rand;
 
@@ -28,6 +30,7 @@ public class Chip8 {
         keypad = new Keypad();
         display.add(keypad);
         stack = new Components.components.Stack();
+        delayTimer = new Components.components.Timer();
         rand = new Random();
         registers = new Register[16];
         for (int i = 0; i < registers.length; i++)
@@ -41,6 +44,11 @@ public class Chip8 {
         catch (IOException e)
         {
             System.out.println("File " + filePath + " failed to read. Exiting...");
+            System.exit(400);
+        }
+        catch (Exception E)
+        {
+            System.out.println("An unknown error occurred. Exiting...");
             System.exit(400);
         }
 
@@ -286,7 +294,6 @@ public class Chip8 {
             // delay to keep fixed instruction rate
             long elapsedTime = System.currentTimeMillis() - start;
             long sleepTime = delay - elapsedTime;
-
             if (sleepTime > 0)
             {
                 try {
