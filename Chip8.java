@@ -145,8 +145,7 @@ public class Chip8 {
                     r = (r & 0xFF);
                     registers[x].write((byte) (r & nn));
                     break;
-
-                    // Dxyn display/draw
+                // Dxyn display/draw
                 case 0xD:
                     registers[0xF].write((byte) 0);  // Reset the collision flag
 
@@ -215,10 +214,10 @@ public class Chip8 {
                             break;
                         // 8xy5 sub
                         case 0x5:
-                            xval = registers[x].read() & 0xFF;
-                            yval = registers[y].read() & 0xFF;
+                            xval = registers[x].read();
+                            yval = registers[y].read();
 
-                            if (xval > yval) {
+                            if (xval >= yval) {
                                 registers[0xF].write((byte) 1);
                             } else {
                                 registers[0xF].write((byte) 0);
@@ -227,13 +226,12 @@ public class Chip8 {
                             difference = (xval - yval) & 0xFF;
                             registers[x].write((byte) difference);
                             break;
-
                         // 8xy7 sub
                         case 0x7:
-                            xval = registers[x].read() & 0xFF;
-                            yval = registers[y].read() & 0xFF;
+                            xval = registers[x].read();
+                            yval = registers[y].read();
 
-                            if (yval > xval) {
+                            if (yval >= xval) {
                                 registers[0xF].write((byte) 1);
                             } else {
                                 registers[0xF].write((byte) 0);

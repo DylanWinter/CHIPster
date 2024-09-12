@@ -10,12 +10,12 @@ public class Register {
 
     public byte read()
     {
-        return data;
+        return (byte) (data & 0xFF);
     }
 
     public void write(byte newData)
     {
-        data = newData;
+        data = (byte) (newData & 0xFF);
     }
 
     public void add(byte valueToAdd)
