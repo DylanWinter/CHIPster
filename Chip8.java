@@ -58,6 +58,8 @@ public class Chip8 {
         Display.createDisplay(display);
 
         long delay = 1000 / rate;
+        float timerDelay = 16.6666f;
+        float timeSinceLastTimerDecrement = 0;
 
         while (true)
         {
@@ -271,13 +273,21 @@ public class Chip8 {
                 case 0xF:
                     switch (nn)
                     {
+                        // Fx07 set Vx to delay timer
+                        case 0x07:
+                            registers[x].write((byte)(delayTimer.getTimer() & 0xFF));
+                            break;
+                        // Fx0a CURRENTLY INCORRECTLY IMPLEMENTED
                         case 0x0A:
                             if (!keypad.isAnyKeyPressed())
                             {
                                 pc -= 2;
                             }
                             break;
-
+                        // Fx15 set delay timer to Vx
+                        case 0x15:
+                            delayTimer.setTimer(delayTimer.getTimer());
+                            break;
                         default:
                             System.out.printf("Error with opcode: %d %d %d %d%n", op, x, y, n);
                     }
@@ -293,6 +303,13 @@ public class Chip8 {
 
             // delay to keep fixed instruction rate
             long elapsedTime = System.currentTimeMillis() - start;
+            // update timers
+            timeSinceLastTimerDecrement += elapsedTime;
+            if (timeSinceLastTimerDecrement > timerDelay)
+            {
+                delayTimer.decrement();
+                timeSinceLastTimerDecrement = 0f;
+            }
             long sleepTime = delay - elapsedTime;
             if (sleepTime > 0)
             {
