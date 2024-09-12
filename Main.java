@@ -4,7 +4,7 @@ public class Main {
 
     public static void main(String[] args)
     {
-        String path = "Roms/Airplane.ch8";
+        String path = "Roms/Breakout.ch8";
         int rate = 300;
 
         emu = new Chip8(path, rate);

@@ -218,7 +218,7 @@ public class Chip8 {
                             xval = registers[x].read() & 0xFF;
                             yval = registers[y].read() & 0xFF;
 
-                            if (xval >= yval) {
+                            if (xval > yval) {
                                 registers[0xF].write((byte) 1);
                             } else {
                                 registers[0xF].write((byte) 0);
@@ -233,7 +233,7 @@ public class Chip8 {
                             xval = registers[x].read() & 0xFF;
                             yval = registers[y].read() & 0xFF;
 
-                            if (yval >= xval) {
+                            if (yval > xval) {
                                 registers[0xF].write((byte) 1);
                             } else {
                                 registers[0xF].write((byte) 0);
@@ -242,6 +242,9 @@ public class Chip8 {
                             difference = (yval - xval) & 0xFF;
                             registers[x].write((byte) difference);
                             break;
+
+                        default:
+                            System.out.printf("Error with opcode: %d %d %d %d%n", op, x, y, n);
                     }
                     break;
 
@@ -260,14 +263,22 @@ public class Chip8 {
 
                 // F depends on last byte  -- CURRENTLY INCOMPLETE --
                 case 0xF:
-                    if (nn == 0x0A)
+                    switch (nn)
                     {
-                        if (!keypad.isAnyKeyPressed())
-                        {
-                            pc -= 2;
-                        }
+                        case 0x0A:
+                            if (!keypad.isAnyKeyPressed())
+                            {
+                                pc -= 2;
+                            }
+                            break;
+
+                        default:
+                            System.out.printf("Error with opcode: %d %d %d %d%n", op, x, y, n);
                     }
+
+
                     break;
+
 
                 default:
                     System.out.printf("Error with opcode: %d %d %d %d%n", op, x, y, n);
